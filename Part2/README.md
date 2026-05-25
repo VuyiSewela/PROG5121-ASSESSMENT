@@ -11,3 +11,17 @@ This project contains:
 Files:
 - Main.java
 - Message.java
+
+TEST DATA USED:
+Registration Test
+Username: vu_y
+Password: Test@123
+Phone Number: +27831234567
+Expected Result:
+Registration successful
+
+Login Test
+Username: vu_y
+Password: Test@123
+Expected Result:
+Welcome to QuickChat
