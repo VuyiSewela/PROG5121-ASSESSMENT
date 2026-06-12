@@ -1,0 +1,227 @@
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+public class Main {
+
+    public static boolean checkUserName(String username) {
+        return username.contains("_") && username.length() <= 5;
+    }
+
+    public static boolean checkPasswordComplexity(String password) {
+        if (password.length() < 8) {
+            return false;
+        }
+
+        boolean hasUpper = false;
+        boolean hasNumber = false;
+        boolean hasSpecial = false;
+
+        for (char ch : password.toCharArray()) {
+            if (Character.isUpperCase(ch)) {
+                hasUpper = true;
+            }
+            if (Character.isDigit(ch)) {
+                hasNumber = true;
+            }
+            if (!Character.isLetterOrDigit(ch)) {
+                hasSpecial = true;
+            }
+        }
+
+        return hasUpper && hasNumber && hasSpecial;
+    }
+
+    public static boolean checkCellPhoneNumber(String number) {
+        return number.matches("^\\+27[6-8][0-9]{8}$");
+    }
+
+    public static boolean loginUser(
+            String enteredUsername,
+            String enteredPassword,
+            String username,
+            String password) {
+        return enteredUsername.equals(username) && enteredPassword.equals(password);
+    }
+
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+        Random random = new Random();
+
+        System.out.println("===== REGISTER =====");
+
+        System.out.print("First Name: ");
+        String firstName = input.nextLine();
+
+        System.out.print("Last Name: ");
+        String lastName = input.nextLine();
+
+        String username;
+        do {
+            System.out.print("Username: ");
+            username = input.nextLine();
+        } while (!checkUserName(username));
+
+        String password;
+        do {
+            System.out.print("Password: ");
+            password = input.nextLine();
+        } while (!checkPasswordComplexity(password));
+
+        String phoneNumber;
+        do {
+            System.out.print("Cell Number: ");
+            phoneNumber = input.nextLine();
+        } while (!checkCellPhoneNumber(phoneNumber));
+
+        System.out.println("\nRegistration Successful!");
+        System.out.println("\n===== LOGIN =====");
+
+        System.out.print("Username: ");
+        String loginUsername = input.nextLine();
+
+        System.out.print("Password: ");
+        String loginPassword = input.nextLine();
+
+        boolean loginSuccess = loginUser(loginUsername, loginPassword, username, password);
+
+        if (!loginSuccess) {
+            System.out.println("Username or Password Incorrect.");
+            return;
+        }
+
+        System.out.println("\nWelcome " + firstName + " " + lastName);
+
+        while (true) {
+            System.out.println("\n===== QUICKCHAT =====");
+            System.out.println("1. Send Messages");
+            System.out.println("2. Show Sent Messages");
+            System.out.println("3. Stored Messages");
+            System.out.println("4. Quit");
+            System.out.print("Choose Option: ");
+
+            int option = Integer.parseInt(input.nextLine());
+
+            if (option == 1) {
+                System.out.print("How many messages would you like to send? ");
+                int numMessages = Integer.parseInt(input.nextLine());
+
+                for (int i = 0; i < numMessages; i++) {
+                    System.out.println("\nMessage " + (i + 1));
+                    System.out.print("Recipient Number: ");
+                    String recipient = input.nextLine();
+
+                    if (!Message.checkRecipientCell(recipient)) {
+                        System.out.println("Cell phone number incorrectly formatted.");
+                        continue;
+                    }
+
+                    System.out.print("Message: ");
+                    String messageText = input.nextLine();
+
+                    if (messageText.length() > 250) {
+                        System.out.println("Message exceeds 250 characters.");
+                        continue;
+                    }
+
+                    String messageID = String.valueOf(100000000 + random.nextInt(900000000));
+                    String hash = Message.createMessageHash(i, messageID, messageText);
+
+                    Message msg = new Message(messageID, username, recipient, messageText, hash);
+
+                    System.out.println("\n1. Send Message");
+                    System.out.println("2. Disregard Message");
+                    System.out.println("3. Store Message");
+
+                    int choice = Integer.parseInt(input.nextLine());
+
+                    if (choice == 1) {
+                        Message.sentMessages.add(msg);
+                        System.out.println("Message Successfully Sent.");
+                    } else if (choice == 2) {
+                        Message.disregardedMessages.add(msg);
+                        System.out.println("Message Disregarded.");
+                    } else if (choice == 3) {
+                        Message.storedMessages.add(msg);
+                        System.out.println("Message Successfully Stored.");
+                    }
+                }
+            } else if (option == 2) {
+                System.out.println("\nSENT MESSAGES");
+                if (Message.sentMessages.isEmpty()) {
+                    System.out.println("No messages sent.");
+                } else {
+                    for (Message msg : Message.sentMessages) {
+                        System.out.println(msg.getMessage());
+                    }
+                }
+            } else if (option == 3) {
+                while (true) {
+                    System.out.println("\n===== STORED MESSAGES =====");
+                    System.out.println("1. Display Sender and Recipient");
+                    System.out.println("2. Display Longest Message");
+                    System.out.println("3. Search Message ID");
+                    System.out.println("4. Search Recipient");
+                    System.out.println("5. Delete Message Using Hash");
+                    System.out.println("6. Display Report");
+                    System.out.println("7. Back");
+                    System.out.print("Choose Option: ");
+
+                    int storedOption = Integer.parseInt(input.nextLine());
+
+                    if (storedOption == 1) {
+                        for (Message msg : Message.storedMessages) {
+                            System.out.println("\nSender: " + msg.getSender());
+                            System.out.println("Recipient: " + msg.getRecipient());
+                        }
+                    } else if (storedOption == 2) {
+                        System.out.println("\nLongest Message:");
+                        System.out.println(Message.getLongestMessage());
+                    } else if (storedOption == 3) {
+                        System.out.print("Enter Message ID: ");
+                        String id = input.nextLine();
+                        Message found = Message.searchByMessageID(id);
+                        if (found != null) {
+                            System.out.println(found.getMessage());
+                        } else {
+                            System.out.println("Message not found.");
+                        }
+                    } else if (storedOption == 4) {
+                        System.out.print("Enter Recipient: ");
+                        String recipientSearch = input.nextLine();
+                        ArrayList<Message> results = Message.searchByRecipient(recipientSearch);
+                        if (results.isEmpty()) {
+                            System.out.println("No messages found.");
+                        } else {
+                            for (Message msg : results) {
+                                System.out.println(msg.getMessage());
+                            }
+                        }
+                    } else if (storedOption == 5) {
+                        System.out.print("Enter Message Hash: ");
+                        String hash = input.nextLine();
+                        boolean deleted = Message.deleteByHash(hash);
+                        if (deleted) {
+                            System.out.println("Message successfully deleted.");
+                        } else {
+                            System.out.println("Hash not found.");
+                        }
+                    } else if (storedOption == 6) {
+                        Message.displayReport();
+                    } else if (storedOption == 7) {
+                        break;
+                    } else {
+                        System.out.println("Invalid Option.");
+                    }
+                }
+            } else if (option == 4) {
+                System.out.println("Goodbye!");
+                break;
+            } else {
+                System.out.println("Invalid Option.");
+            }
+        }
+
+        input.close();
+    }
+}
