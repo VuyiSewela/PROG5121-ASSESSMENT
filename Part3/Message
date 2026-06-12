@@ -1,0 +1,170 @@
+import java.util.ArrayList;
+
+public class Message {
+
+    private String messageID;
+    private String messageHash;
+    private String sender;
+    private String recipient;
+    private String message;
+
+    public static ArrayList<Message> sentMessages = new ArrayList<>();
+    public static ArrayList<Message> storedMessages = new ArrayList<>();
+    public static ArrayList<Message> disregardedMessages = new ArrayList<>();
+
+    public Message(String messageID,
+                   String sender,
+                   String recipient,
+                   String message,
+                   String messageHash) {
+
+        this.messageID = messageID;
+        this.sender = sender;
+        this.recipient = recipient;
+        this.message = message;
+        this.messageHash = messageHash;
+    }
+
+    public String getMessageID() {
+        return messageID;
+    }
+
+    public String getMessageHash() {
+        return messageHash;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public static boolean checkRecipientCell(String recipient) {
+
+        return recipient.matches("^\\+27[6-8][0-9]{8}$");
+    }
+
+    public static String createMessageHash(int messageNumber,
+                                           String messageID,
+                                           String messageText) {
+
+        String[] words = messageText.split(" ");
+
+        String firstWord =
+                words[0].toUpperCase();
+
+        String lastWord =
+                words[words.length - 1]
+                        .toUpperCase();
+
+        return messageID.substring(0, 2)
+                + ":"
+                + messageNumber
+                + ":"
+                + firstWord
+                + lastWord;
+    }
+
+    public static String getLongestMessage() {
+
+        String longest = "";
+
+        for (Message msg : storedMessages) {
+
+            if (msg.getMessage().length()
+                    > longest.length()) {
+
+                longest = msg.getMessage();
+            }
+        }
+
+        return longest;
+    }
+
+    public static Message searchByMessageID(String id) {
+
+        for (Message msg : storedMessages) {
+
+            if (msg.getMessageID().equals(id)) {
+
+                return msg;
+            }
+        }
+
+        return null;
+    }
+
+    public static ArrayList<Message> searchByRecipient(
+            String recipient) {
+
+        ArrayList<Message> results =
+                new ArrayList<>();
+
+        for (Message msg : storedMessages) {
+
+            if (msg.getRecipient()
+                    .equals(recipient)) {
+
+                results.add(msg);
+            }
+        }
+
+        return results;
+    }
+
+    public static boolean deleteByHash(
+            String hash) {
+
+        for (int i = 0;
+             i < storedMessages.size();
+             i++) {
+
+            if (storedMessages.get(i)
+                    .getMessageHash()
+                    .equals(hash)) {
+
+                storedMessages.remove(i);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void displayReport() {
+
+        System.out.println(
+                "\nMESSAGE REPORT"
+        );
+
+        for (Message msg :
+                storedMessages) {
+
+            System.out.println(
+                    "--------------------"
+            );
+
+            System.out.println(
+                    "Hash: "
+                            + msg.getMessageHash()
+            );
+
+            System.out.println(
+                    "Recipient: "
+                            + msg.getRecipient()
+            );
+
+            System.out.println(
+                    "Message: "
+                            + msg.getMessage()
+            );
+        }
+    }
+}
