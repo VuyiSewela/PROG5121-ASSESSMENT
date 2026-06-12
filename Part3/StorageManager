@@ -1,0 +1,155 @@
+package Part3;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+
+public class StorageManager {
+    
+    private static final String SENT_MESSAGES_FILE = "sent_messages.json";
+    private static final String STORED_MESSAGES_FILE = "stored_messages.json";
+    private static final String DISREGARDED_MESSAGES_FILE = "disregarded_messages.json";
+    private static final String USER_DATA_FILE = "user_data.json";
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    
+    // Save sent messages to JSON file
+    public static void saveSentMessages(ArrayList<Message> messages) {
+        saveToFile(messages, SENT_MESSAGES_FILE);
+    }
+    
+    // Load sent messages from JSON file
+    public static ArrayList<Message> loadSentMessages() {
+        return loadFromFile(SENT_MESSAGES_FILE, new TypeToken<ArrayList<Message>>(){}.getType());
+    }
+    
+    // Save stored messages to JSON file
+    public static void saveStoredMessages(ArrayList<Message> messages) {
+        saveToFile(messages, STORED_MESSAGES_FILE);
+    }
+    
+    // Load stored messages from JSON file
+    public static ArrayList<Message> loadStoredMessages() {
+        return loadFromFile(STORED_MESSAGES_FILE, new TypeToken<ArrayList<Message>>(){}.getType());
+    }
+    
+    // Save disregarded messages to JSON file
+    public static void saveDisregardedMessages(ArrayList<Message> messages) {
+        saveToFile(messages, DISREGARDED_MESSAGES_FILE);
+    }
+    
+    // Load disregarded messages from JSON file
+    public static ArrayList<Message> loadDisregardedMessages() {
+        return loadFromFile(DISREGARDED_MESSAGES_FILE, new TypeToken<ArrayList<Message>>(){}.getType());
+    }
+    
+    // Save user data (registration info)
+    public static void saveUserData(String firstName, String lastName, String username, 
+                                   String password, String phoneNumber) {
+        UserData userData = new UserData(firstName, lastName, username, password, phoneNumber);
+        saveToFile(userData, USER_DATA_FILE);
+    }
+    
+    // Load user data
+    public static UserData loadUserData() {
+        return loadFromFile(USER_DATA_FILE, new TypeToken<UserData>(){}.getType());
+    }
+    
+    // Check if user data exists
+    public static boolean userDataExists() {
+        File file = new File(USER_DATA_FILE);
+        return file.exists() && file.length() > 0;
+    }
+    
+    // Generic save method
+    private static void saveToFile(Object data, String filename) {
+        try (Writer writer = new FileWriter(filename)) {
+            gson.toJson(data, writer);
+        } catch (IOException e) {
+            System.err.println("Error saving to " + filename + ": " + e.getMessage());
+        }
+    }
+    
+    // Generic load method
+    private static <T> T loadFromFile(String filename, Type type) {
+        File file = new File(filename);
+        if (!file.exists() || file.length() == 0) {
+            return null;
+        }
+        
+        try (Reader reader = new FileReader(filename)) {
+            return gson.fromJson(reader, type);
+        } catch (IOException e) {
+            System.err.println("Error loading from " + filename + ": " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // Save all message data at once
+    public static void saveAllMessageData(ArrayList<Message> sentMessages, 
+                                         ArrayList<Message> storedMessages,
+                                         ArrayList<Message> disregardedMessages) {
+        saveSentMessages(sentMessages);
+        saveStoredMessages(storedMessages);
+        saveDisregardedMessages(disregardedMessages);
+    }
+    
+    // Load all message data at once
+    public static void loadAllMessageData() {
+        ArrayList<Message> sent = loadSentMessages();
+        ArrayList<Message> stored = loadStoredMessages();
+        ArrayList<Message> disregarded = loadDisregardedMessages();
+        
+        if (sent != null) {
+            Message.sentMessages = sent;
+        }
+        if (stored != null) {
+            Message.storedMessages = stored;
+        }
+        if (disregarded != null) {
+            Message.disregardedMessages = disregarded;
+        }
+    }
+    
+    // Delete all JSON files (for reset functionality)
+    public static void deleteAllDataFiles() {
+        deleteFile(SENT_MESSAGES_FILE);
+        deleteFile(STORED_MESSAGES_FILE);
+        deleteFile(DISREGARDED_MESSAGES_FILE);
+        deleteFile(USER_DATA_FILE);
+    }
+    
+    private static void deleteFile(String filename) {
+        File file = new File(filename);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+    
+    // User data class for JSON serialization
+    static class UserData {
+        private String firstName;
+        private String lastName;
+        private String username;
+        private String password;
+        private String phoneNumber;
+        
+        public UserData(String firstName, String lastName, String username, 
+                       String password, String phoneNumber) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.username = username;
+            this.password = password;
+            this.phoneNumber = phoneNumber;
+        }
+        
+        // Getters
+        public String getFirstName() { return firstName; }
+        public String getLastName() { return lastName; }
+        public String getUsername() { return username; }
+        public String getPassword() { return password; }
+        public String getPhoneNumber() { return phoneNumber; }
+    }
+}
